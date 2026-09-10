@@ -1,27 +1,37 @@
-export type LayoutDirection = "row" | "column";
+export type DeviceKey = "iphone" | "android";
 
-export type DeviceKey = "iphone" | "pixel";
-export type TextAlign = "left" | "center" | "right";
-export type FontFamily = "sans" | "serif" | "mono";
+export type DevicePlatform = "ios" | "android";
 
-export type TextOverlay = {
-  id: string;
-  text: string;
-  /** Position within the device screen in percentages (0..100). */
-  xPct: number;
-  yPct: number;
-  fontFamily: FontFamily;
-  fontSize: number;
-  fontWeight: 400 | 500 | 600 | 700;
-  italic: boolean;
-  underline: boolean;
-  align: TextAlign;
-  color: string;
+export type DeviceSpec = {
+  key: DeviceKey;
+  label: string;
+  platform: DevicePlatform;
+  viewport: {
+    width: number;
+    height: number;
+  };
+  diagonal: string;
+  note: string;
+  finish: string;
 };
 
 export type ScreenItem = {
   id: string;
   src: string;
   name: string;
-  overlays: Record<DeviceKey, TextOverlay[]>;
+  type: string;
+  size: number;
+};
+
+export type DevicePlacement = {
+  frameZoom: number;
+  framePan: {
+    x: number;
+    y: number;
+  };
+  imageZoom: number;
+  imageOffset: {
+    x: number;
+    y: number;
+  };
 };

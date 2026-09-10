@@ -1,6 +1,5 @@
-# App Mockup Studio
 
-![App Mockup Studio Screenshot](./public/app.png)
+![App Mockup Studio Screenshot](./public/home.png)
 
 ## Clone & install dependencies
 ```bash
