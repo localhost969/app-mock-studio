@@ -55,6 +55,9 @@ function DeviceCard({
   const placementRef = React.useRef(placement);
   placementRef.current = placement;
 
+  // The device is drawn at baseScale * frameZoom, so a pixel inside it is that much smaller on screen
+  const effectiveScale = baseScale * placement.frameZoom;
+
   // Dynamically calculate the optimal base scale so the frame always fits the user's screen
   React.useEffect(() => {
     const el = canvasRef.current;
@@ -164,15 +167,20 @@ function DeviceCard({
     const activeDrag = dragRef.current;
     if (!activeDrag || activeDrag.pointerId !== e.pointerId) return;
 
-    const nextOffset = {
-      x: activeDrag.originX + e.clientX - activeDrag.startX,
-      y: activeDrag.originY + e.clientY - activeDrag.startY,
-    };
+    const dx = e.clientX - activeDrag.startX;
+    const dy = e.clientY - activeDrag.startY;
 
     if (activeDrag.target === "frame") {
-      patchPlacement({ framePan: nextOffset });
+      // the frame is panned in screen space, outside its own scale transform
+      patchPlacement({ framePan: { x: activeDrag.originX + dx, y: activeDrag.originY + dy } });
     } else {
-      patchPlacement({ imageOffset: nextOffset });
+      // the screenshot sits inside the scaled frame, so divide by the scale to keep it under the cursor
+      patchPlacement({
+        imageOffset: {
+          x: activeDrag.originX + dx / effectiveScale,
+          y: activeDrag.originY + dy / effectiveScale,
+        },
+      });
     }
   };
 
@@ -203,8 +211,6 @@ function DeviceCard({
       setTimeout(() => setIsCopied(false), 2200);
     }
   };
-
-  const effectiveScale = baseScale * placement.frameZoom;
 
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-xs">
