@@ -1,6 +1,7 @@
 import * as React from "react";
 import {
   CheckIcon,
+  CircleAlertIcon,
   CopyIcon,
   DownloadIcon,
   MoveIcon,
@@ -49,7 +50,10 @@ function DeviceCard({
 
   const [dragTarget, setDragTarget] = React.useState<DragTarget | null>(null);
   const [isDownloading, setIsDownloading] = React.useState(false);
-  const [isCopied, setIsCopied] = React.useState(false);
+  const [copyState, setCopyState] = React.useState<"idle" | "copied" | "failed">("idle");
+  const copyTimer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  React.useEffect(() => () => clearTimeout(copyTimer.current), []);
 
   // Keep latest placement in a ref for stable non-passive event listeners
   const placementRef = React.useRef(placement);
@@ -204,12 +208,11 @@ function DeviceCard({
   };
 
   const handleCopy = async () => {
-    if (!canvasRef.current || isCopied) return;
+    if (!canvasRef.current || copyState !== "idle") return;
     const success = await copyElementToClipboard(canvasRef.current);
-    if (success) {
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2200);
-    }
+    setCopyState(success ? "copied" : "failed");
+    clearTimeout(copyTimer.current);
+    copyTimer.current = setTimeout(() => setCopyState("idle"), success ? 2200 : 3500);
   };
 
   return (
@@ -232,14 +235,26 @@ function DeviceCard({
           <button
             type="button"
             onClick={handleCopy}
-            title="Copy image to clipboard"
+            title={
+              copyState === "failed"
+                ? "Your browser blocked copying to the clipboard. Use Download instead."
+                : "Copy image to clipboard"
+            }
+            aria-live="polite"
             className="flex h-8 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground/80 hover:bg-foreground/5 hover:text-foreground transition-colors active:scale-95 shadow-2xs"
           >
-            {isCopied ? (
+            {copyState === "copied" ? (
               <>
                 <CheckIcon className="h-3.5 w-3.5 text-emerald-500" />
                 <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                   Copied
+                </span>
+              </>
+            ) : copyState === "failed" ? (
+              <>
+                <CircleAlertIcon className="h-3.5 w-3.5 text-red-500" />
+                <span className="text-xs font-semibold text-red-600 dark:text-red-400">
+                  Copy failed
                 </span>
               </>
             ) : (
